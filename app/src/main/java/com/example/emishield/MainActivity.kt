@@ -87,9 +87,6 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.Currency
 import java.util.Locale
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 // ============================================================
 // COLORS
@@ -2849,11 +2846,48 @@ fun PaymentReminderCard(
         emiData
             .mapNotNull { emi ->
                 try {
-                    val date = LocalDate.parse(
-                        emi.dueDate.trim(),
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    )
-                    date to emi
+                    val parts = emi.dueDate.trim().split("/")
+
+                    if (parts.size == 3) {
+                        val day = parts[0].toInt()
+                        val month = parts[1].toInt()
+                        val year = parts[2].toInt()
+
+                        val calendar = java.util.Calendar.getInstance().apply {
+                            set(
+                                java.util.Calendar.YEAR,
+                                year
+                            )
+                            set(
+                                java.util.Calendar.MONTH,
+                                month - 1
+                            )
+                            set(
+                                java.util.Calendar.DAY_OF_MONTH,
+                                day
+                            )
+                            set(
+                                java.util.Calendar.HOUR_OF_DAY,
+                                0
+                            )
+                            set(
+                                java.util.Calendar.MINUTE,
+                                0
+                            )
+                            set(
+                                java.util.Calendar.SECOND,
+                                0
+                            )
+                            set(
+                                java.util.Calendar.MILLISECOND,
+                                0
+                            )
+                        }
+
+                        calendar.time to emi
+                    } else {
+                        null
+                    }
                 } catch (_: Exception) {
                     null
                 }
@@ -2862,17 +2896,67 @@ fun PaymentReminderCard(
     }
 
     val daysUntilDue = nextEmi?.let {
-        ChronoUnit.DAYS.between(LocalDate.now(), it.first).toInt()
+        val today = java.util.Calendar.getInstance().apply {
+            set(
+                java.util.Calendar.HOUR_OF_DAY,
+                0
+            )
+            set(
+                java.util.Calendar.MINUTE,
+                0
+            )
+            set(
+                java.util.Calendar.SECOND,
+                0
+            )
+            set(
+                java.util.Calendar.MILLISECOND,
+                0
+            )
+        }
+
+        val dueDate = java.util.Calendar.getInstance().apply {
+            time = it.first
+            set(
+                java.util.Calendar.HOUR_OF_DAY,
+                0
+            )
+            set(
+                java.util.Calendar.MINUTE,
+                0
+            )
+            set(
+                java.util.Calendar.SECOND,
+                0
+            )
+            set(
+                java.util.Calendar.MILLISECOND,
+                0
+            )
+        }
+
+        val differenceMillis =
+            dueDate.timeInMillis - today.timeInMillis
+
+        (
+                differenceMillis /
+                        (24 * 60 * 60 * 1000L)
+                ).toInt()
     }
 
     val reminderText = if (nextEmi == null) {
         "No valid EMI due date available"
     } else {
         when {
-            daysUntilDue!! < 0 -> "EMI was due on ${nextEmi.second.dueDate}"
-            daysUntilDue == 0 -> "EMI is due today"
+            daysUntilDue!! < 0 ->
+                "EMI was due on ${nextEmi.second.dueDate}"
+
+            daysUntilDue == 0 ->
+                "EMI is due today"
+
             daysUntilDue <= reminderDays ->
                 "Reminder: ${nextEmi.second.lender} is due in $daysUntilDue day(s)"
+
             else ->
                 "Reminder will appear $reminderDays days before the due date"
         }
@@ -2909,8 +2993,11 @@ fun PaymentReminderCard(
 
             if (nextEmi != null) {
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = "${nextEmi.second.lender} • ${formatPayWiseMoney(nextEmi.second.amount)} • Due ${nextEmi.second.dueDate}",
+                    text = "${nextEmi.second.lender} • ${
+                        formatPayWiseMoney(nextEmi.second.amount)
+                    } • Due ${nextEmi.second.dueDate}",
                     color = GreyText,
                     fontSize = 13.sp
                 )
@@ -2930,13 +3017,27 @@ fun PaymentReminderCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+
                 listOf(1, 3, 5, 7).forEach { days ->
+
                     Button(
-                        onClick = { onReminderDaysChanged(days) },
+                        onClick = {
+                            onReminderDaysChanged(days)
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (reminderDays == days) Orange else LightBlue,
-                            contentColor = if (reminderDays == days) Color.White else DeepBlue
+                            containerColor =
+                                if (reminderDays == days) {
+                                    Orange
+                                } else {
+                                    LightBlue
+                                },
+                            contentColor =
+                                if (reminderDays == days) {
+                                    Color.White
+                                } else {
+                                    DeepBlue
+                                }
                         ),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
                             horizontal = 4.dp,
@@ -2950,7 +3051,6 @@ fun PaymentReminderCard(
         }
     }
 }
-
 // ============================================================
 // FINANCIAL CARD
 // ============================================================
