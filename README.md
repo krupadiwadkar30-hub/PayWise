@@ -58,7 +58,7 @@ From the Dashboard, users can access:
 - Profile
 - Settings
 
-Screenshots
+## Screenshots
 https://github.com/krupadiwadkar30-hub/PayWise/tree/master/screenshots
 
 ## Project Status
