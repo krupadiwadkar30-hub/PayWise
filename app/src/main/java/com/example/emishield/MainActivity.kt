@@ -103,7 +103,7 @@ val GreyText = Color(0xFF607D8B)
 val SuccessGreen = Color(0xFF2E7D32)
 val ErrorRed = Color(0xFFD32F2F)
 
-const val BASE_URL = "http://192.168.0.102:5000"
+const val BASE_URL = "http://192.168.0.105:5000"
 
 // ============================================================
 // LANGUAGE TRANSLATION
