@@ -123,7 +123,7 @@ val GreyText = Color(0xFF607D8B)
 val SuccessGreen = Color(0xFF2E7D32)
 val ErrorRed = Color(0xFFD32F2F)
 
-const val BASE_URL = "https://frayed-bunny-ritzy.ngrok-free.dev"
+const val BASE_URL = "http://192.168.0.102:5000"
 
 // ============================================================
 // LANGUAGE TRANSLATION
@@ -5113,21 +5113,30 @@ fun DashboardScreen(
     // Everyday Expenses data is kept per logged-in user
     // during the current app session.
 
-    var expenses by remember {
+    var expenses by remember(userId) {
         mutableStateOf(
-            MonthlyExpenseStorage.loadExpenses(context)
+            MonthlyExpenseStorage.loadExpenses(
+                context = context,
+                userId = userId
+            )
         )
     }
 
-    var monthlyInsights by remember {
+    var monthlyInsights by remember(userId) {
         mutableStateOf(
-            MonthlyExpenseStorage.loadMonthlyInsights(context)
+            MonthlyExpenseStorage.loadMonthlyInsights(
+                context = context,
+                userId = userId
+            )
         )
     }
 
-    var spendingLimits by remember {
+    var spendingLimits by remember(userId) {
         mutableStateOf(
-            MonthlyExpenseStorage.loadSpendingLimits(context)
+            MonthlyExpenseStorage.loadSpendingLimits(
+                context = context,
+                userId = userId
+            )
         )
     }
 
@@ -5235,14 +5244,33 @@ fun DashboardScreen(
                             ?: Date()
                     )
 
-                monthlyInsights =
+                val updatedMonthlyInsights =
                     monthlyInsights +
                             MonthlyInsight(
                                 month = previousMonthName,
                                 totalSpent = previousTotal,
-                                categoryTotals =
-                                    previousCategoryTotals
+                                categoryTotals = previousCategoryTotals
                             )
+
+                monthlyInsights = updatedMonthlyInsights
+
+                MonthlyExpenseStorage.saveMonthlyInsights(
+                    context = context,
+                    userId = userId,
+                    insights = updatedMonthlyInsights
+                )
+
+                MonthlyExpenseStorage.saveExpenses(
+                    context = context,
+                    userId = userId,
+                    expenses = emptyList()
+                )
+
+                MonthlyExpenseStorage.saveSpendingLimits(
+                    context = context,
+                    userId = userId,
+                    limits = emptyMap()
+                )
             }
 
             expenses = emptyList()
@@ -5271,9 +5299,6 @@ fun DashboardScreen(
 
         "Add EMI" ->
             tr("add_emi", languageCode)
-
-        "Financial Summary" ->
-            tr("financial_summary", languageCode)
 
         "Everyday Expenses" ->
             tr("everyday_expenses", languageCode)
@@ -5304,159 +5329,179 @@ fun DashboardScreen(
                 drawerContainerColor = BackgroundWhite
             ) {
 
-                Spacer(
-                    modifier = Modifier.height(35.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
 
-                Text(
-                    text = tr(
-                        "paywise",
-                        languageCode
-                    ),
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
-                    modifier = Modifier.padding(
-                        horizontal = 20.dp
-                    )
-                )
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
 
-                Text(
-                    text = tr(
-                        "tagline",
-                        languageCode
-                    ),
-                    color = GreyText,
-                    modifier = Modifier.padding(
-                        horizontal = 20.dp
-                    )
-                )
+                        item {
+                            Spacer(
+                                modifier = Modifier.height(35.dp)
+                            )
 
-                Spacer(
-                    modifier = Modifier.height(25.dp)
-                )
+                            Text(
+                                text = tr("paywise", languageCode),
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryBlue,
+                                modifier = Modifier.padding(
+                                    horizontal = 20.dp
+                                )
+                            )
 
-                HorizontalDivider()
+                            Text(
+                                text = tr("tagline", languageCode),
+                                color = GreyText,
+                                modifier = Modifier.padding(
+                                    horizontal = 20.dp
+                                )
+                            )
 
-                Spacer(
-                    modifier = Modifier.height(10.dp)
-                )
+                            Spacer(
+                                modifier = Modifier.height(25.dp)
+                            )
 
-                val menuItems = listOf(
-                    "Dashboard",
-                    "Add Salary",
-                    "My EMIs",
-                    "Add EMI",
-                    "Financial Summary",
-                    "Everyday Expenses",
-                    "Monthly Insights",
-                    "Smart Financial Decisions",
-                    "Profile",
-                    "Settings"
-                )
+                            HorizontalDivider()
 
-                menuItems.forEach { item ->
+                            Spacer(
+                                modifier = Modifier.height(10.dp)
+                            )
+                        }
 
-                    val translatedItem = when (item) {
+                        items(
+                            listOf(
+                                "Dashboard",
+                                "Add Salary",
+                                "My EMIs",
+                                "Add EMI",
+                                "Everyday Expenses",
+                                "Monthly Insights",
+                                "Smart Financial Decisions",
+                                "Profile",
+                                "Settings"
+                            )
+                        ) { item ->
 
-                        "Dashboard" ->
-                            tr("dashboard", languageCode)
+                            val translatedItem = when (item) {
 
-                        "Add Salary" ->
-                            tr("add_salary", languageCode)
+                                "Dashboard" ->
+                                    tr("dashboard", languageCode)
 
-                        "My EMIs" ->
-                            tr("my_emis", languageCode)
+                                "Add Salary" ->
+                                    tr("add_salary", languageCode)
 
-                        "Add EMI" ->
-                            tr("add_emi", languageCode)
+                                "My EMIs" ->
+                                    tr("my_emis", languageCode)
 
-                        "Financial Summary" ->
-                            tr("financial_summary", languageCode)
+                                "Add EMI" ->
+                                    tr("add_emi", languageCode)
 
-                        "Everyday Expenses" ->
-                            tr("everyday_expenses", languageCode)
+                                "Everyday Expenses" ->
+                                    tr("everyday_expenses", languageCode)
 
-                        "Monthly Insights" ->
-                            tr("monthly_insights", languageCode)
+                                "Monthly Insights" ->
+                                    tr("monthly_insights", languageCode)
 
-                        "Smart Financial Decisions" ->
-                            tr("smart_financial_decisions", languageCode)
+                                "Smart Financial Decisions" ->
+                                    tr("smart_financial_decisions", languageCode)
 
-                        "Profile" ->
-                            tr("profile", languageCode)
+                                "Profile" ->
+                                    tr("profile", languageCode)
 
-                        "Settings" ->
-                            tr("settings", languageCode)
+                                "Settings" ->
+                                    tr("settings", languageCode)
 
-                        else ->
-                            item
-                    }.toString()
+                                else ->
+                                    item
+                            }
+
+                            NavigationDrawerItem(
+                                label = {
+                                    Text(
+                                        text = translatedItem,
+                                        fontWeight =
+                                            if (selectedPage == item) {
+                                                FontWeight.Bold
+                                            } else {
+                                                FontWeight.Normal
+                                            }
+                                    )
+                                },
+                                selected = selectedPage == item,
+                                onClick = {
+                                    selectedPage = item
+
+                                    scope.launch {
+                                        drawerState.close()
+                                    }
+                                },
+                                colors =
+                                    NavigationDrawerItemDefaults.colors(
+                                        selectedContainerColor = LightBlue,
+                                        selectedTextColor = DeepBlue,
+                                        unselectedTextColor = DarkText
+                                    ),
+                                modifier = Modifier.padding(
+                                    horizontal = 10.dp,
+                                    vertical = 2.dp
+                                )
+                            )
+                        }
+                    }
+
+                    HorizontalDivider()
 
                     NavigationDrawerItem(
                         label = {
                             Text(
-                                text = translatedItem,
-                                fontWeight =
-                                    if (selectedPage == item) {
-                                        FontWeight.Bold
-                                    } else {
-                                        FontWeight.Normal
-                                    }
+                                text = tr("logout", languageCode),
+                                color = ErrorRed
                             )
                         },
-                        selected = selectedPage == item,
+                        selected = false,
                         onClick = {
-                            selectedPage = item
                             scope.launch {
                                 drawerState.close()
                             }
+
+                            onLogout()
                         },
-                        colors =
-                            NavigationDrawerItemDefaults.colors(
-                                selectedContainerColor = LightBlue,
-                                selectedTextColor = DeepBlue,
-                                unselectedTextColor = DarkText
-                            ),
                         modifier = Modifier.padding(
                             horizontal = 10.dp,
-                            vertical = 2.dp
+                            vertical = 8.dp
                         )
                     )
                 }
 
                 Spacer(
-                    modifier = Modifier.height(20.dp)
+                    modifier = Modifier.weight(1f)
                 )
 
                 HorizontalDivider()
 
                 NavigationDrawerItem(
-
                     label = {
-
                         Text(
-                            text = tr(
-                                "logout",
-                                languageCode
-                            ),
+                            text = tr("logout", languageCode),
                             color = ErrorRed
                         )
                     },
-
                     selected = false,
-
                     onClick = {
-
                         scope.launch {
                             drawerState.close()
                         }
-
                         onLogout()
                     },
-
                     modifier = Modifier.padding(
-                        horizontal = 10.dp
+                        horizontal = 10.dp,
+                        vertical = 8.dp
                     )
                 )
             }
@@ -5588,18 +5633,6 @@ fun DashboardScreen(
                     }
 
                     // ==================================================
-                    // FINANCIAL SUMMARY
-                    // ==================================================
-
-                    "Financial Summary" -> {
-
-                        FinancialSummaryScreen(
-                            response = emiResponse,
-                            languageCode = languageCode
-                        )
-                    }
-
-                    // ==================================================
                     // EVERYDAY EXPENSES
                     // ==================================================
 
@@ -5622,6 +5655,7 @@ fun DashboardScreen(
 
                                 MonthlyExpenseStorage.saveExpenses(
                                     context = context,
+                                    userId = userId,
                                     expenses = expenses
                                 )
                             },
@@ -5633,6 +5667,7 @@ fun DashboardScreen(
 
                                 MonthlyExpenseStorage.saveSpendingLimits(
                                     context = context,
+                                    userId = userId,
                                     limits = spendingLimits
                                 )
                             }
@@ -5642,6 +5677,7 @@ fun DashboardScreen(
                     "Monthly Insights" -> {
                         MonthlyInsightsScreen(
                             monthlyInsights = monthlyInsights,
+                            expenses = expenses,
                             languageCode = languageCode
                         )
                     }
@@ -5920,7 +5956,7 @@ fun DashboardHome(
                 )
             }
 
-                    item {
+            item {
 
                 Button(
                     onClick = {

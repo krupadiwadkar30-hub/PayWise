@@ -190,45 +190,5 @@ fun SmartFinancialDecisionsScreen(
                 )
             }
         }
-
-        // ============================================================
-        // FINANCIAL HEALTH TIPS
-        // ============================================================
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    onFinancialHealthTipsClick()
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = LightBlue
-            )
-        ) {
-
-            Column(
-                modifier = Modifier.padding(18.dp)
-            ) {
-
-                Text(
-                    text = tr(
-                        "financial_health_tips",
-                        languageCode
-                    ),
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DeepBlue
-                )
-
-                Spacer(
-                    modifier = Modifier.height(6.dp)
-                )
-
-                Text(
-                    text = "Get useful financial tips based on your financial situation.",
-                    color = DarkText
-                )
-            }
-        }
     }
 }
