@@ -151,8 +151,8 @@ https://github.com/krupadiwadkar30-hub/PayWise
 ## Team
 **PayWise Team**
 * Krupa Diwadkar
-* Aarya Dhadve
 * Anwesha Deshmukh
+* Aarya Dhadve
 
 ## Vision
 Our vision is to make personal financial management **simple, organised, accessible, and easy to understand**.
